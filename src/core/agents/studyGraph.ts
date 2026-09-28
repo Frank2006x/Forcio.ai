@@ -1,15 +1,22 @@
-import { START, StateGraph } from "@langchain/langgraph";
+import { Command, START, StateGraph } from "@langchain/langgraph";
 import { StudyStateSchema } from "./state";
 import runProblemFetcher from "./problemFetcher";
 import runProblemAnalyzer from "./problemAnalyzer";
 import runChatTutor from "./chatTutor";
 import runDialogueManager from "./dialogueManager";
+import { checkpointer } from "./checkpointer";
 
 console.log("🎓 Initializing Study Mode Graph...");
 
 // Build the study mode graph
 const studyGraph = new StateGraph(StudyStateSchema)
   // Add nodes
+  .addNode("entryRouter", (state) => {
+    const hasLoadedProblem = !!state.problemStatement;
+    return new Command({
+      goto: hasLoadedProblem ? "chatTutor" : "problemFetcher",
+    });
+  })
   .addNode("problemFetcher", runProblemFetcher)
   .addNode("problemAnalyzer", runProblemAnalyzer)
   .addNode("chatTutor", runChatTutor)
@@ -17,8 +24,8 @@ const studyGraph = new StateGraph(StudyStateSchema)
 
 // Define edges for study mode flow
 const app = studyGraph
-  // Entry point -> problem fetcher
-  .addEdge(START, "problemFetcher")
+  // Entry point -> fetch problem for new sessions, or continue chat for existing sessions
+  .addEdge(START, "entryRouter")
 
   // Problem flow
   .addEdge("problemFetcher", "problemAnalyzer")
@@ -38,7 +45,7 @@ const app = studyGraph
     return "__end__";
   })
 
-  .compile();
+  .compile({ checkpointer });
 
 console.log("✅ Study Mode Graph compiled successfully!");
 

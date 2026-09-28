@@ -27,6 +27,7 @@ interface CodeStore {
 
   // NEW: Multi-mode state
   mode: Mode;
+  threadId: string;
   problemName: string;
   problemLocked: boolean;
   problemStatement: string;
@@ -58,6 +59,7 @@ interface CodeStore {
 
   // Actions
   setMode: (mode: Mode) => void;
+  setThreadId: (threadId: string) => void;
   setProblemName: (name: string) => void;
   lockProblem: () => void;
   unlockProblem: () => void;
@@ -108,6 +110,7 @@ export const useCodeStore = create<CodeStore>()(
 
       // Multi-mode state
       mode: null,
+      threadId: "",
       problemName: "",
       problemLocked: false,
       problemStatement: "",
@@ -139,6 +142,7 @@ export const useCodeStore = create<CodeStore>()(
 
       // Actions
       setMode: (mode) => set({ mode }),
+      setThreadId: (threadId) => set({ threadId }),
       setProblemName: (name) => set({ problemName: name }),
       lockProblem: () => set({ problemLocked: true }),
       unlockProblem: () => set({ problemLocked: false }),
@@ -190,6 +194,7 @@ export const useCodeStore = create<CodeStore>()(
       resetSession: () =>
         set({
           mode: null,
+          threadId: "",
           problemName: "",
           problemLocked: false,
           problemStatement: "",
@@ -216,6 +221,7 @@ export const useCodeStore = create<CodeStore>()(
       clearSession: () =>
         set({
           mode: null,
+          threadId: "",
           problemName: "",
           problemLocked: false,
           problemStatement: "",

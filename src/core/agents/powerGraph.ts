@@ -6,6 +6,7 @@ import runStrategist from "./strategist";
 import runCodeGenerator from "./codeGenerator";
 import runTestValidator from "./testValidator";
 import runExplainer from "./explainer";
+import { checkpointer } from "./checkpointer";
 
 console.log("⚡ Initializing Power Mode Graph...");
 
@@ -36,7 +37,7 @@ const app = powerGraph
   // End after explanation
   .addEdge("explainer", "__end__")
 
-  .compile();
+  .compile({ checkpointer });
 
 console.log("✅ Power Mode Graph compiled successfully!");
 

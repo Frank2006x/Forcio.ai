@@ -1,12 +1,13 @@
 import { NextRequest } from "next/server";
 import powerGraph from "@/core/agents/powerGraph";
 import { createPowerInitialState } from "@/core/agents/state";
+import { randomUUID } from "crypto";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
-    const { problemName, language, userCode } = await req.json();
+    const { problemName, language, userCode, threadId } = await req.json();
 
     if (!problemName) {
       return new Response(
@@ -14,6 +15,8 @@ export async function POST(req: NextRequest) {
         { status: 400, headers: { "Content-Type": "application/json" } },
       );
     }
+
+    const effectiveThreadId = threadId || randomUUID();
 
     // Create initial state for power mode
     const initialState = createPowerInitialState(problemName);
@@ -29,11 +32,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Execute the graph and wait for completion
-    console.log("⚡ Starting power mode for:", problemName);
+    console.log("⚡ Starting power mode for:", problemName, effectiveThreadId);
 
     let finalState = initialState; // Initialize with initial state
     for await (const state of await powerGraph.stream(initialState, {
       streamMode: "values",
+      configurable: {
+        thread_id: effectiveThreadId,
+      },
     })) {
       finalState = state;
       console.log("📊 Step completed:", state.flow[state.flow.length - 1]);
@@ -48,6 +54,7 @@ export async function POST(req: NextRequest) {
         mode: "power",
         data: {
           // Common fields
+          threadId: effectiveThreadId,
           problemName: finalState.problemName,
           problemStatement: finalState.problemStatement,
           difficulty: finalState.difficulty,

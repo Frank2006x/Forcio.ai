@@ -20,6 +20,7 @@ const RightPanel: React.FC<RightPanelProps> = ({ hideMode = false }) => {
     code,
     language,
     mode,
+    threadId,
     problemName,
     isLoading,
     error,
@@ -27,14 +28,8 @@ const RightPanel: React.FC<RightPanelProps> = ({ hideMode = false }) => {
     // Study mode state (Chat-based)
     conversationHistory,
     isSolutionComplete,
-    topicsCovered,
-    userUnderstandingLevel,
     // Problem data
     problemStatement,
-    difficulty,
-    category,
-    examples,
-    constraints,
     // Power mode state
     strategies,
     selectedStrategy,
@@ -44,6 +39,7 @@ const RightPanel: React.FC<RightPanelProps> = ({ hideMode = false }) => {
     // Actions
     appendStreamingContent,
     setLoading,
+    setThreadId,
     clearStreamingContent,
     setError,
     addFlowStep,
@@ -82,29 +78,14 @@ const RightPanel: React.FC<RightPanelProps> = ({ hideMode = false }) => {
       console.log(`📤 Sending request to ${endpoint}`);
 
       // Build request body
+      const activeThreadId = threadId || crypto.randomUUID();
       const requestBody: Record<string, unknown> = {
+        threadId: activeThreadId,
         problemName,
         code,
         language,
         question: question || undefined,
       };
-
-      // For follow-up messages in study mode, include existing problem data
-      if (
-        mode === "study" &&
-        problemStatement &&
-        conversationHistory.length > 0
-      ) {
-        console.log("🔄 Including existing problem data for follow-up");
-        requestBody.problemStatement = problemStatement;
-        requestBody.difficulty = difficulty;
-        requestBody.category = category;
-        requestBody.examples = examples;
-        requestBody.constraints = constraints;
-        requestBody.conversationHistory = conversationHistory;
-        requestBody.topicsCovered = topicsCovered;
-        requestBody.userUnderstandingLevel = userUnderstandingLevel;
-      }
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -124,6 +105,8 @@ const RightPanel: React.FC<RightPanelProps> = ({ hideMode = false }) => {
       if (!result.success) {
         throw new Error(result.error || "Request failed");
       }
+
+      setThreadId(result.data?.threadId || activeThreadId);
 
       // Update state based on mode
       if (mode === "study" && result.data) {
@@ -201,18 +184,12 @@ const RightPanel: React.FC<RightPanelProps> = ({ hideMode = false }) => {
     clearStreamingContent,
     setError,
     setLoading,
+    setThreadId,
     setProblemData,
     addToConversation,
     completeSolution,
     lockProblem,
-    conversationHistory,
-    problemStatement,
-    difficulty,
-    category,
-    examples,
-    constraints,
-    topicsCovered,
-    userUnderstandingLevel,
+    threadId,
   ]);
 
   // Auto-trigger initial guidance when problem is loaded in study mode
